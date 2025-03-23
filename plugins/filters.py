@@ -276,8 +276,6 @@ async def delallconfirm(client, message):
 
 
 
-from database.users_chats_db import Database
-
 db = Database(DATABASE_URI, DATABASE_NAME)
 
 @Client.on_message(filters.text & filters.group)
