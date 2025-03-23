@@ -14,9 +14,17 @@ from database.connections_mdb import active_connection
 import re
 import json
 import base64
+
+import time
+import hashlib
+import requests
+from info import BOT_USERNAME
+
 logger = logging.getLogger(__name__)
 
 BATCH_FILES = {}
+# Temporary storage for active tokens
+active_tokens = {}
 
 @Client.on_message(filters.command("start") & filters.incoming)
 async def start(client, message):
@@ -522,20 +530,10 @@ async def save_template(client, message):
     await sts.edit(f"Successfully changed template for {title} to\n\n{template}")
 
 
-import time
-import hashlib
-import requests
-from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from info import BOT_USERNAME
-from database import db  # Assuming db.py contains token storage functions
-
 TOKEN_EXPIRY_TIME = 3600  # 1 hour (in seconds)
 SHORTENER_API_KEY = "5a6b57d3cbd44e9b81cda3a2ec9d93024fcc6838"
 SHORTENER_URL = "https://modijiurl.com/api?api={api_key}&url={url}"
 
-# Temporary storage for active tokens
-active_tokens = {}
 
 @Client.on_message(filters.command("verify") & filters.private)
 async def verify(client, message):
