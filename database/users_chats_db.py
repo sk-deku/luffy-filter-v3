@@ -142,11 +142,6 @@ class Database:
     async def get_db_size(self):
         return (await self.db.command("dbstats"))['dataSize']
 
-
-db = Database(DATABASE_URI, DATABASE_NAME)
-
-
-
     async def update_tokens(self, user_id, amount):
         user = await self.col.find_one({"id": int(user_id)})
         if user:
@@ -158,3 +153,6 @@ db = Database(DATABASE_URI, DATABASE_NAME)
     async def get_tokens(self, user_id):
         user = await self.col.find_one({"id": int(user_id)})
         return user.get("tokens", 0) if user else 0
+
+
+db = Database(DATABASE_URI, DATABASE_NAME)
