@@ -525,20 +525,23 @@ async def save_template(client, message):
 import time
 import hashlib
 import requests
+from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from info import BOT_USERNAME
+from database import db  # Assuming db.py contains token storage functions
 
-TOKEN_EXPIRY_TIME = 3600  # 1 hour in seconds
+TOKEN_EXPIRY_TIME = 3600  # 1 hour (in seconds)
 SHORTENER_API_KEY = "5a6b57d3cbd44e9b81cda3a2ec9d93024fcc6838"
 SHORTENER_URL = "https://modijiurl.com/api?api={api_key}&url={url}"
 
-# Temporary storage for active tokens (expires after 1 hour)
+# Temporary storage for active tokens
 active_tokens = {}
 
 @Client.on_message(filters.command("verify") & filters.private)
 async def verify(client, message):
     user_id = message.from_user.id
 
-    # Generate a unique token for this user (hash of user_id + timestamp)
+    # Generate a unique token for this user
     raw_token = f"{user_id}-{time.time()}"
     hashed_token = hashlib.sha256(raw_token.encode()).hexdigest()
 
@@ -556,7 +559,7 @@ async def verify(client, message):
         [InlineKeyboardButton("📜 How to Verify?", url="https://t.me/LinkZzzg/6")]
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
-    await message.reply("Click the button below to verify and earn 10 tokens!", reply_markup=reply_markup)
+    await message.reply("Click the button below to verify and earn 10 tokens! \n Note‼️ this Token Expire within 1 HOUR.", reply_markup=reply_markup)
 
 @Client.on_message(filters.command("tokens") & filters.private)
 async def check_tokens(client, message):
