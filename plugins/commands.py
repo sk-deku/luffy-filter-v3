@@ -558,7 +558,7 @@ async def verify(client, message):
     reply_markup = InlineKeyboardMarkup(buttons)
     await message.reply("Click the button below to verify and earn 10 tokens!", reply_markup=reply_markup)
 
-@Client.on_message(filters.command("token") & filters.private)
+@Client.on_message(filters.command("tokens") & filters.private)
 async def check_tokens(client, message):
     user_id = message.from_user.id
     token_balance = await db.get_tokens(user_id)
