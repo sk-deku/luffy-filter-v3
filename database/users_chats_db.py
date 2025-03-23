@@ -146,9 +146,6 @@ class Database:
 db = Database(DATABASE_URI, DATABASE_NAME)
 
 
-    async def get_tokens(self, user_id):
-        user = await self.col.find_one({"id": int(user_id)})
-        return user.get("tokens", 0) if user else 0
 
     async def update_tokens(self, user_id, amount):
         user = await self.col.find_one({"id": int(user_id)})
@@ -157,3 +154,7 @@ db = Database(DATABASE_URI, DATABASE_NAME)
             await self.col.update_one({"id": int(user_id)}, {"$set": {"tokens": new_balance}})
         else:
             await self.col.insert_one({"id": int(user_id), "tokens": max(0, amount)})
+
+    async def get_tokens(self, user_id):
+        user = await self.col.find_one({"id": int(user_id)})
+        return user.get("tokens", 0) if user else 0
