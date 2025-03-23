@@ -113,6 +113,23 @@ async def start(client, message):
         )
         return
     data = message.command[1]
+    
+        # **🔹 Check if the user clicked a verification link**
+    if user_id in active_tokens and active_tokens[user_id]["token"] == data:
+        if time.time() > active_tokens[user_id]["expires"]:  # Token expired
+            await message.reply("⏳ This verification link has expired. Please run /verify again.")
+            del active_tokens[user_id]  # Remove expired token
+            return
+        
+        # Grant 10 tokens to the user
+        await db.update_tokens(user_id, 10)
+        del active_tokens[user_id]  # Remove used token
+
+        await message.reply("✅ Verification successful! You have earned **10 tokens**.")
+        return  # Stop execution to prevent file lookup
+
+    # **🔹 Continue with file handling if not a token**
+    
     try:
         pre, file_id = data.split('_', 1)
     except:
