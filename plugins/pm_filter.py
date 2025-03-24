@@ -632,10 +632,6 @@ async def auto_filter(client, msg, spoll=False):
                     return
         else:
             return
-
-    @Client.on_message(filters.text & filters.group)
-async def auto_filter(client, message):
-    user_id = message.from_user.id
     
     # Check if user has enough tokens
     user_tokens = await db.get_tokens(user_id)
