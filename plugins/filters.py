@@ -12,9 +12,6 @@ from database.connections_mdb import active_connection
 from utils import get_file_id, parser, split_quotes
 from info import ADMINS
 
-from database.users_chats_db import db
-from database.users_chats_db import Database
-from info import DATABASE_URI, DATABASE_NAME
 
 @Client.on_message(filters.command(['filter', 'add']) & filters.incoming)
 async def addfilter(client, message):
@@ -113,7 +110,7 @@ async def addfilter(client, message):
     await add_filter(grp_id, text, reply_text, btn, fileid, alert)
 
     await message.reply_text(
-        f"Filter for  {text}  added in  **{title}**",
+        f"Filter for  `{text}`  added in  **{title}**",
         quote=True,
         parse_mode=enums.ParseMode.MARKDOWN
     )
@@ -161,12 +158,12 @@ async def get_all(client, message):
         filterlist = f"Total number of filters in **{title}** : {count}\n\n"
 
         for text in texts:
-            keywords = " ×  {}\n".format(text)
+            keywords = " ×  `{}`\n".format(text)
 
             filterlist += keywords
 
         if len(filterlist) > 4096:
-            with io.BytesIO(str.encode(filterlist.replace("", ""))) as keyword_file:
+            with io.BytesIO(str.encode(filterlist.replace("`", ""))) as keyword_file:
                 keyword_file.name = "keywords.txt"
                 await message.reply_document(
                     document=keyword_file,
@@ -273,52 +270,3 @@ async def delallconfirm(client, message):
             ]),
             quote=True
         )
-
-
-
-db = Database(DATABASE_URI, DATABASE_NAME)
-
-@Client.on_message(filters.text & filters.group)
-async def auto_filter(client, message):
-    user_id = message.from_user.id
-
-    buttons = []
-    for file in results:
-        buttons.append([InlineKeyboardButton(file["file_name"], callback_data=f"file_{file['_id']}")])
-
-    reply_markup = InlineKeyboardMarkup(buttons)
-    await message.reply("🔍 Select a file:", reply_markup=reply_markup)
-    
-    # Check if user has enough tokens
-    user_tokens = await db.get_tokens(user_id)
-    if user_tokens <= 0:
-        return await message.reply("❌ You don't have enough tokens to download this file! Use /verify in PM to earn tokens.")
-
-    # Proceed with normal filtering and file sending process
-    results = await get_filters(message.text)
-    if not results:
-        return
-
-
-@Client.on_callback_query(filters.regex(r"^file_(.*)"))
-async def send_file(client, callback_query):
-    user_id = callback_query.from_user.id
-
-    # Check if user has enough tokens before sending the file
-    user_tokens = await db.get_tokens(user_id)
-    if user_tokens <= 0:
-        return await callback_query.answer("❌ Not enough tokens! Use /verify in PM to earn more.", show_alert=True)
-
-    file_id = callback_query.data.split("_")[1]
-    file_data = await get_file_by_id(file_id)
-
-    if file_data:
-        # Deduct 1 token from the user
-        await db.update_tokens(user_id, -1)
-
-        # Send the file in PM
-        await client.send_document(user_id, file_data["file_id"], caption="Here's your file! 📂")
-        await callback_query.answer("✅ File sent in PM!", show_alert=True)
-
-    else:
-        await callback_query.answer("❌ File not found!", show_alert=True)
