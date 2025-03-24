@@ -280,44 +280,49 @@ db = Database(DATABASE_URI, DATABASE_NAME)
 
 @Client.on_message(filters.text & filters.group)
 async def auto_filter(client, message):
+    """Handles filtering messages automatically."""
     user_id = message.from_user.id
-    
+
     # Check if user has enough tokens
     user_tokens = await db.get_tokens(user_id)
     if user_tokens <= 0:
-        return await message.reply("❌ You don't have enough tokens to download this file! Use /verify in PM to earn tokens.")
+        return await message.reply("❌ You don't have enough tokens! Use /verify in PM to earn more.")
 
-    # Proceed with normal filtering and file sending process
-    results = await get_filters(message.text)
+    results = await get_filters(message.chat.id)
     if not results:
         return
 
-    buttons = []
-    for file in results:
-        buttons.append([InlineKeyboardButton(file["file_name"], callback_data=f"file_{file['_id']}")])
+    buttons = [
+        [InlineKeyboardButton(file["file_name"], callback_data=f"file_{file['_id']}")]
+        for file in results
+    ]
 
-    reply_markup = InlineKeyboardMarkup(buttons)
-    await message.reply("🔍 Select a file:", reply_markup=reply_markup)
+    await message.reply("🔍 Select a file:", reply_markup=InlineKeyboardMarkup(buttons))
+
 
 @Client.on_callback_query(filters.regex(r"^file_(.*)"))
 async def send_file(client, callback_query):
+    """Handles sending files when a user selects one."""
     user_id = callback_query.from_user.id
 
-    # Check if user has enough tokens before sending the file
+    # Check token balance
     user_tokens = await db.get_tokens(user_id)
     if user_tokens <= 0:
         return await callback_query.answer("❌ Not enough tokens! Use /verify in PM to earn more.", show_alert=True)
 
     file_id = callback_query.data.split("_")[1]
-    file_data = await get_file_by_id(file_id)
+    file_data = await db.get_file_by_id(file_id)  # Correct function call
 
-    if file_data:
-        # Deduct 1 token from the user
-        await db.update_tokens(user_id, -1)
+    if not file_data:
+        return await callback_query.answer("❌ File not found!", show_alert=True)
 
-        # Send the file in PM
+    # Deduct 1 token
+    await db.update_tokens(user_id, -1)
+
+    # Send file in PM
+    try:
         await client.send_document(user_id, file_data["file_id"], caption="Here's your file! 📂")
         await callback_query.answer("✅ File sent in PM!", show_alert=True)
-
-    else:
-        await callback_query.answer("❌ File not found!", show_alert=True)
+    except Exception as e:
+        logger.error(f"Error sending file: {e}")
+        await callback_query.answer("❌ Failed to send file!", show_alert=True)
