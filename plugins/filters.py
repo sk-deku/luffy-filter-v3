@@ -299,25 +299,3 @@ async def auto_filter(client, message):
     reply_markup = InlineKeyboardMarkup(buttons)
     await message.reply("🔍 Select a file:", reply_markup=reply_markup)
 
-@Client.on_callback_query(filters.regex(r"^file_(.*)"))
-async def send_file(client, callback_query):
-    user_id = callback_query.from_user.id
-
-    # Check if user has enough tokens before sending the file
-    user_tokens = await db.get_tokens(user_id)
-    if user_tokens <= 0:
-        return await callback_query.answer("❌ Not enough tokens! Use /verify in PM to earn more.", show_alert=True)
-
-    file_id = callback_query.data.split("_")[1]
-    file_data = await get_file_by_id(file_id)
-
-    if file_data:
-        # Deduct 1 token from the user
-        await db.update_tokens(user_id, -1)
-
-        # Send the file in PM
-        await client.send_document(user_id, file_data["file_id"], caption="Here's your file! 📂")
-        await callback_query.answer("✅ File sent in PM!", show_alert=True)
-
-    else:
-        await callback_query.answer("❌ File not found!", show_alert=True)
