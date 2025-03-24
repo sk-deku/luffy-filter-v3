@@ -616,8 +616,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
 
 
 async def auto_filter(client, msg, spoll=False):
-    
-    # Check if user has enough tokens
+
+    await query.answer()
     user_id = query.from_user.id
     user_tokens = await db.get_tokens(user_id)
     if user_tokens <= 0:
