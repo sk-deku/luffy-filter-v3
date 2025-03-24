@@ -729,6 +729,8 @@ async def auto_filter(client, msg, spoll=False):
     else:
         await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
+    if sent_message:
+        await db.update_tokens(user_id, user_tokens - 1)
 
     if spoll:
         await msg.message.delete()
