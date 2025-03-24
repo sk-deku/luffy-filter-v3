@@ -615,7 +615,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
     await query.answer('Piracy Is Crime')
 
 
-async def auto_filter(client, msg, spoll=False):
+async def auto_filter(client, message, msg, spoll=False):
 
     user_id = message.from_user.id
     user_tokens = await db.get_tokens(user_id)
