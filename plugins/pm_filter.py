@@ -632,10 +632,6 @@ async def auto_filter(client, msg, spoll=False):
         else:
             return
     
-    # Check if user has enough tokens
-    user_tokens = await db.get_tokens(user_id)
-    if user_tokens <= 0:
-        return await message.reply("❌ You don't have enough tokens to download this file! Use /verify in PM to earn tokens.")
     
     else:
         settings = await get_settings(msg.message.chat.id)
