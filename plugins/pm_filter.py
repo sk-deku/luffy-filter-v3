@@ -437,7 +437,10 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     await query.answer('Check PM, I have sent files in PM.', show_alert=True)
                 else:
                     await query.answer('You do not have enough tokens to download this file.\nUse /verify to earn tokens.', show_alert=True)
-
+            except Exception as e:
+            logger.exception("An error occurred in check subbb query", exc_info=e)
+            await query.answer("Something went wrong! Please try again later.", show_alert=True)     
+  
         except Exception as e:
             logger.exception("An error occurred in checksub query", exc_info=e)
             await query.answer("Something went wrong! Please try again later.", show_alert=True)     
