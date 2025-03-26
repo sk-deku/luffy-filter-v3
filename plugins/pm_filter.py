@@ -396,48 +396,52 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.answer(url=f"https://t.me/{temp.U_NAME}?start={ident}_{file_id}")
 
     elif query.data == "checksub":
-        if AUTH_CHANNEL and not await is_subscribed(client, query):
-            await query.answer("I Like Your Smartness, But Don't Be Oversmart 😒", show_alert=True)
-            return
-        ident, file_id = query.data.split("#")
-        files_ = await get_file_details(file_id)
-        if not files_:
-            return await query.answer('No such file exist.')
-        files = files_[0]
-        title = files.file_name
-        size = get_size(files.file_size)
-        f_caption = files.caption
-        if CUSTOM_FILE_CAPTION:
-            try:
-                f_caption = CUSTOM_FILE_CAPTION.format(file_name='' if title is None else title,
-                                                       file_size='' if size is None else size,
-                                                       file_caption='' if f_caption is None else f_caption)
-            except Exception as e:
-                logger.exception(e)
-                f_caption = f_caption
-        if f_caption is None:
-            f_caption = f"{title}"
-        await query.answer()
         try:
-            user_id = query.from_user.id
-            user = await db.get_user(user_id)
+            if AUTH_CHANNEL and not await is_subscribed(client, query):
+                await query.answer("I Like Your Smartness, But Don't Be Oversmart 😒", show_alert=True)
+                return
+            ident, file_id = query.data.split("#")
+            files_ = await get_file_details(file_id)
+            if not files_:
+                return await query.answer('No such file exist.')
+            files = files_[0]
+            title = files.file_name
+            size = get_size(files.file_size)
+            f_caption = files.caption
+            if CUSTOM_FILE_CAPTION:
+                try:
+                    f_caption = CUSTOM_FILE_CAPTION.format(file_name='' if title is None else title,
+                                                           file_size='' if size is None else size,
+                                                           file_caption='' if f_caption is None else f_caption)
+                except Exception as e:
+                    logger.exception(e)
+                    f_caption = f_caption
+            if f_caption is None:
+                f_caption = f"{title}"
+            await query.answer()
+            try:
+                user_id = query.from_user.id
+                user = await db.get_user(user_id)
 
-            if user and user.get('tokens', 0) > 0:
+                if user and user.get('tokens', 0) > 0:
                     # Send the file
-                await client.send_cached_media(
-                    chat_id=query.from_user.id,
-                    file_id=file_id,
-                    caption=f_caption,
-                    protect_content=True if ident == "filep" else False                 )
+                    await client.send_cached_media(
+                        chat_id=query.from_user.id,
+                        file_id=file_id,
+                        caption=f_caption,
+                        protect_content=True if ident == "filep" else False
+                    )
 
                     # Deduct 1 token
-                await db.update_user(user_id, {'$inc': {'tokens': -1}})
-                await query.answer('Check PM, I have sent files in PM.', show_alert=True)
+                    await db.update_user(user_id, {'$inc': {'tokens': -1}})
+                    await query.answer('Check PM, I have sent files in PM.', show_alert=True)
+                else:
+                    await query.answer('You do not have enough tokens to download this file.\nUse /verify to earn tokens.', show_alert=True)
 
-            else:
-                await query.answer('You do not have enough tokens to download this file.\nUse /verify to earn tokens.', show_alert=True)
-
-     
+        except Exception as e:
+            logger.exception("An error occurred in checksub query", exc_info=e)
+            await query.answer("Something went wrong! Please try again later.", show_alert=True)     
+        
     elif query.data == "pages":
         await query.answer()
     elif query.data == "start":
