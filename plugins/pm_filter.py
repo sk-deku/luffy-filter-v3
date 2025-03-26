@@ -418,12 +418,26 @@ async def cb_handler(client: Client, query: CallbackQuery):
         if f_caption is None:
             f_caption = f"{title}"
         await query.answer()
-        await client.send_cached_media(
-            chat_id=query.from_user.id,
-            file_id=file_id,
-            caption=f_caption,
-            protect_content=True if ident == 'checksubp' else False
-        )
+        try:
+            user_id = query.from_user.id
+            user = await db.get_user(user_id)
+
+            if user and user.get('tokens', 0) > 0:
+                    # Send the file
+                await client.send_cached_media(
+                    chat_id=query.from_user.id,
+                    file_id=file_id,
+                    caption=f_caption,
+                    protect_content=True if ident == "filep" else False                 )
+
+                    # Deduct 1 token
+                await db.update_user(user_id, {'$inc': {'tokens': -1}})
+                await query.answer('Check PM, I have sent files in PM.', show_alert=True)
+
+            else:
+                await query.answer('You do not have enough tokens to download this file.\nUse /verify to earn tokens.', show_alert=True)
+
+     
     elif query.data == "pages":
         await query.answer()
     elif query.data == "start":
